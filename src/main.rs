@@ -1,5 +1,6 @@
 use clap::Parser;
 use rcli::{process_csv, process_gen_pass, Opts, SubCommand};
+use zxcvbn::zxcvbn;
 
 // rcli csv i input.csv -o output.json --header -d ','
 
@@ -23,7 +24,9 @@ fn main() -> anyhow::Result<()> {
                 opts.number,
                 opts.symbol,
             );
+            let estimate = zxcvbn(&password, &[]);
             println!("Generate password: {}", password);
+            eprintln!("Password strength: {}", estimate.score());
         }
     }
 
