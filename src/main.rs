@@ -1,5 +1,8 @@
 use clap::Parser;
-use rcli::{process_csv, process_gen_pass, Opts, SubCommand};
+use rcli::{
+    process_csv, process_decode, process_encode, process_gen_pass, Base64SubCommand, Opts,
+    SubCommand,
+};
 use zxcvbn::zxcvbn;
 
 // rcli csv i input.csv -o output.json --header -d ','
@@ -28,6 +31,10 @@ fn main() -> anyhow::Result<()> {
             println!("Generate password: {}", password);
             eprintln!("Password strength: {}", estimate.score());
         }
+        SubCommand::Base64(subcmd) => match subcmd {
+            Base64SubCommand::Encode(opts) => process_encode(&opts.input, opts.format)?,
+            Base64SubCommand::Decode(opts) => process_decode(&opts.input, opts.format)?,
+        },
     }
 
     Ok(())
