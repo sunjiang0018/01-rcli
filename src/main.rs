@@ -1,7 +1,7 @@
 use clap::Parser;
 use rcli::{
     process_csv, process_decode, process_encode, process_gen_pass, Base64SubCommand, Opts,
-    SubCommand,
+    SubCommand, TextSubCommand,
 };
 use zxcvbn::zxcvbn;
 
@@ -34,6 +34,15 @@ fn main() -> anyhow::Result<()> {
         SubCommand::Base64(subcmd) => match subcmd {
             Base64SubCommand::Encode(opts) => process_encode(&opts.input, opts.format)?,
             Base64SubCommand::Decode(opts) => process_decode(&opts.input, opts.format)?,
+        },
+
+        SubCommand::Text(opts) => match opts {
+            TextSubCommand::Sign(opts) => {
+                println!("Sign: {:?}", opts);
+            }
+            TextSubCommand::Verify(opts) => {
+                println!("Verify: {:?}", opts);
+            }
         },
     }
 
