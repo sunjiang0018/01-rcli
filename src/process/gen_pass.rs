@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::seq::SliceRandom;
 
 const UPPER: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -10,7 +11,7 @@ pub fn process_gen_pass(
     lower: bool,
     number: bool,
     symbol: bool,
-) -> String {
+) -> Result<String> {
     let mut rng = rand::thread_rng();
     let mut password = Vec::new();
     let mut chars = Vec::new();
@@ -40,5 +41,6 @@ pub fn process_gen_pass(
 
     password.shuffle(&mut rng);
 
-    String::from_utf8(password).unwrap()
+    let password = String::from_utf8(password)?;
+    Ok(password)
 }
