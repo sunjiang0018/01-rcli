@@ -1,3 +1,8 @@
 ### test index page
 
 GET http://localhost:8080/Cargo.toml HTTP/1.1
+
+
+### test static file with tower-http
+
+GET http://localhost:8080/tower/fixtures/ed25519.sk HTTP/1.1
