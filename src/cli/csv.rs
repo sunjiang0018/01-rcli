@@ -2,6 +2,8 @@ use std::{fmt, str::FromStr};
 
 use clap::Parser;
 
+use crate::{process_csv, CmdExecutor};
+
 use super::verify_file;
 
 #[derive(Debug, Parser)]
@@ -56,5 +58,17 @@ impl FromStr for OutputFormat {
             "yaml" => Ok(OutputFormat::Yaml),
             _ => Err(anyhow::anyhow!("Invalid format")),
         }
+    }
+}
+
+impl CmdExecutor for CsvOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let output = if let Some(output) = self.output {
+            output
+        } else {
+            format!("output.{}", self.format)
+        };
+        process_csv(&self.input, output, self.format)?;
+        Ok(())
     }
 }

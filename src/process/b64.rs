@@ -5,11 +5,9 @@ use base64::{
     Engine as _,
 };
 
-use crate::{cli::Base64Format, get_reader};
+use crate::cli::Base64Format;
 
-pub fn process_encode(input: &str, format: Base64Format) -> anyhow::Result<String> {
-    let mut reader = get_reader(input)?;
-
+pub fn process_encode(reader: &mut dyn Read, format: Base64Format) -> anyhow::Result<String> {
     let mut buf = Vec::new();
     reader.read_to_end(&mut buf)?;
 
@@ -20,9 +18,7 @@ pub fn process_encode(input: &str, format: Base64Format) -> anyhow::Result<Strin
     Ok(encoded)
 }
 
-pub fn process_decode(input: &str, format: Base64Format) -> anyhow::Result<Vec<u8>> {
-    let mut reader = get_reader(input)?;
-
+pub fn process_decode(reader: &mut dyn Read, format: Base64Format) -> anyhow::Result<Vec<u8>> {
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;
 
@@ -37,19 +33,23 @@ pub fn process_decode(input: &str, format: Base64Format) -> anyhow::Result<Vec<u
 
 #[cfg(test)]
 mod tests {
+    use crate::get_reader;
+
     use super::*;
 
     #[test]
     fn test_process_encode() {
         let input = "Cargo.toml";
+        let mut reader = get_reader(input).unwrap();
         let format = Base64Format::Standard;
-        assert!(process_encode(input, format).is_ok());
+        assert!(process_encode(&mut reader, format).is_ok());
     }
 
     #[test]
     fn test_process_decode() {
         let input = "fixtures/b64.txt";
+        let mut reader = get_reader(input).unwrap();
         let format = Base64Format::Standard;
-        assert!(process_decode(input, format).is_ok());
+        assert!(process_decode(&mut reader, format).is_ok());
     }
 }

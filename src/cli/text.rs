@@ -2,6 +2,9 @@ use core::fmt;
 use std::{path::PathBuf, str::FromStr};
 
 use clap::Parser;
+use tokio::fs;
+
+use crate::CmdExecutor;
 
 use super::{verify_file, verify_path};
 
@@ -80,5 +83,49 @@ impl From<TextSignFormat> for &'static str {
 impl fmt::Display for TextSignFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Into::<&str>::into(*self))
+    }
+}
+
+impl CmdExecutor for TextSignOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let sig = crate::process_text_sign(&self.input, &self.key, self.format)?;
+        println!("{}", sig);
+        Ok(())
+    }
+}
+
+impl CmdExecutor for TextVerifyOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let verified = crate::process_text_verify(&self.input, &self.key, self.format, &self.sig)?;
+
+        if verified {
+            println!("Signature verified");
+        } else {
+            println!("Signature not verified");
+        }
+        Ok(())
+    }
+}
+
+impl CmdExecutor for GenerateKeyOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let key = crate::process_text_generate(self.format)?;
+
+        for (k, v) in key {
+            fs::write(self.output.join(k), v).await?;
+        }
+
+        Ok(())
+    }
+}
+
+impl CmdExecutor for TextSubCommand {
+    async fn execute(self) -> anyhow::Result<()> {
+        match self {
+            TextSubCommand::Sign(opts) => opts.execute().await?,
+            TextSubCommand::Verify(opts) => opts.execute().await?,
+            TextSubCommand::Generate(opts) => opts.execute().await?,
+        }
+        Ok(())
     }
 }

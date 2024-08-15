@@ -6,6 +6,8 @@ mod text;
 
 use std::path::{Path, PathBuf};
 
+use crate::CmdExecutor;
+
 use self::{csv::CsvOpts, genpass::GenPassOpts};
 use clap::Parser;
 
@@ -30,18 +32,18 @@ pub enum SubCommand {
     #[command(name = "genpass", about = "Generate a random password")]
     GenPass(GenPassOpts),
 
-    #[command(subcommand)]
+    #[command(subcommand, about = "Base64 encode or decode")]
     Base64(Base64SubCommand),
 
-    #[command(subcommand)]
+    #[command(subcommand, about = "Sign or verify text")]
     Text(TextSubCommand),
 
-    #[command(subcommand)]
+    #[command(subcommand, about = "Serve a directory over HTTP")]
     Http(HttpSubCommand),
 }
 
 fn verify_file(filename: &str) -> Result<String, &'static str> {
-    // if filename is "=" or file exists
+    // if filename is "-" or file exists
     if filename == "-" || Path::new(filename).exists() {
         Ok(filename.into())
     } else {
@@ -55,6 +57,18 @@ fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
         Ok(path.into())
     } else {
         Err("Path does not exist or is not a directory")
+    }
+}
+
+impl CmdExecutor for SubCommand {
+    async fn execute(self) -> anyhow::Result<()> {
+        match self {
+            SubCommand::Csv(opts) => opts.execute().await,
+            SubCommand::GenPass(opts) => opts.execute().await,
+            SubCommand::Base64(sub_cmd) => sub_cmd.execute().await,
+            SubCommand::Text(sub_cmd) => sub_cmd.execute().await,
+            SubCommand::Http(sub_cmd) => sub_cmd.execute().await,
+        }
     }
 }
 

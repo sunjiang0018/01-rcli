@@ -1,4 +1,4 @@
-use std::{fs, io::Read, path::Path};
+use std::{collections::HashMap, fs, io::Read, path::Path};
 
 use anyhow::Result;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
@@ -24,7 +24,7 @@ pub trait KeyLoader {
 }
 
 pub trait KeyGenerator {
-    fn generate() -> Result<Vec<Vec<u8>>>;
+    fn generate() -> Result<HashMap<&'static str, Vec<u8>>>;
 }
 
 pub struct Blake3 {
@@ -81,7 +81,7 @@ pub fn process_text_verify(
     Ok(verified)
 }
 
-pub fn process_text_generate(format: TextSignFormat) -> Result<Vec<Vec<u8>>> {
+pub fn process_text_generate(format: TextSignFormat) -> Result<HashMap<&'static str, Vec<u8>>> {
     match format {
         TextSignFormat::Blake3 => Blake3::generate(),
         TextSignFormat::Ed25519 => Ed25519Signer::generate(),
@@ -146,20 +146,26 @@ impl KeyLoader for Ed25519Verifier {
 }
 
 impl KeyGenerator for Blake3 {
-    fn generate() -> Result<Vec<Vec<u8>>> {
+    fn generate() -> Result<HashMap<&'static str, Vec<u8>>> {
         let key = process_gen_pass(32, true, true, true, true)?;
         let key = key.as_bytes().to_vec();
-        Ok(vec![key])
+        let mut map = HashMap::new();
+        map.insert("blake3", key);
+        Ok(map)
     }
 }
 
 impl KeyGenerator for Ed25519Signer {
-    fn generate() -> Result<Vec<Vec<u8>>> {
+    fn generate() -> Result<HashMap<&'static str, Vec<u8>>> {
         let mut cspring = OsRng;
         let key = SigningKey::generate(&mut cspring);
         let pk = key.verifying_key().to_bytes().to_vec();
         let sk = key.to_bytes().to_vec();
-        Ok(vec![sk, pk])
+
+        let mut map = HashMap::new();
+        map.insert("ed25519.sk", sk);
+        map.insert("ed25519.pk", pk);
+        Ok(map)
     }
 }
 
